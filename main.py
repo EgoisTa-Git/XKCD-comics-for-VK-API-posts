@@ -12,7 +12,7 @@ def get_comic(url):
     return response.json()
 
 
-def get_image(url):
+def get_image_from_comic(url):
     response = requests.get(url)
     response.raise_for_status()
     return response.content
@@ -31,14 +31,14 @@ def get_vk_groups(url, token, version):
 
 
 def post_comic(url, group_id, token, version, image, message):
-    upload_server_payload = {
+    upload_server_params = {
         'access_token': token,
         'v': version,
         'group_id': group_id,
     }
     upload_server_response = requests.get(
         f'{url}photos.getWallUploadServer',
-        params=upload_server_payload,
+        params=upload_server_params,
     )
     upload_server_response.raise_for_status()
     response = upload_server_response.json()['response']
@@ -46,10 +46,10 @@ def post_comic(url, group_id, token, version, image, message):
     image_data = {
         'photo': image,
     }
-    upload_post = requests.post(upload_url, files=image_data)
-    upload_post.raise_for_status()
-    server, photo, hash_ = upload_post.json().values()
-    save_payload = {
+    upload_image_response = requests.post(upload_url, files=image_data)
+    upload_image_response.raise_for_status()
+    server, photo, hash_ = upload_image_response.json().values()
+    save_params = {
         'access_token': token,
         'v': version,
         'server': server,
@@ -59,14 +59,14 @@ def post_comic(url, group_id, token, version, image, message):
     }
     save_response = requests.get(
         f'{url}photos.saveWallPhoto',
-        params=save_payload,
+        params=save_params,
     )
     save_response.raise_for_status()
     response = save_response.json()['response'][0]
     owner_id = response['owner_id']
     photo_id = response['id']
     photo = f'photo{owner_id}_{photo_id}'
-    post_payload = {
+    post_params = {
         'access_token': token,
         'v': version,
         'owner_id': -group_id,
@@ -77,7 +77,7 @@ def post_comic(url, group_id, token, version, image, message):
     }
     response = requests.get(
         f'{url}wall.post',
-        params=post_payload,
+        params=post_params,
     )
     response.raise_for_status()
     print(response.json())
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     comic_image_url = comic['img']
     comic_comment = comic['alt']
     with open(f'comic_{xkcd_number}.png', 'wb') as file:
-        file.write(get_image(comic_image_url))
+        file.write(get_image_from_comic(comic_image_url))
 
     with open(f'comic_{xkcd_number}.png', 'rb') as comic_image:
         post_comic(
