@@ -1,5 +1,4 @@
 import os
-from pprint import pprint
 
 import requests
 from dotenv import load_dotenv
@@ -31,7 +30,7 @@ def get_vk_groups(url, token, version):
     return response.json()
 
 
-def post_comic(url, group_id, token, version, image):
+def post_comic(url, group_id, token, version, image, message):
     upload_server_payload = {
         'access_token': token,
         'v': version,
@@ -56,23 +55,39 @@ def post_comic(url, group_id, token, version, image):
         'server': server,
         'photo': photo,
         'hash': hash_,
+        'group_id': group_id,
     }
     save_response = requests.get(
         f'{url}photos.saveWallPhoto',
         params=save_payload,
     )
     save_response.raise_for_status()
-    pprint(save_response.json())
-    # вызовите метод photos.saveWallPhoto с параметрами server, photo, hash
-    # wall.post в параметре attachments "photo" + {owner_id} + "_" + {photo_id}
-    pass
+    response = save_response.json()['response'][0]
+    owner_id = response['owner_id']
+    photo_id = response['id']
+    photo = f'photo{owner_id}_{photo_id}'
+    post_payload = {
+        'access_token': token,
+        'v': version,
+        'owner_id': -group_id,
+        'from_group': 1,
+        'attachments': photo,
+        'message': message,
+        'close_comments': 1,
+    }
+    response = requests.get(
+        f'{url}wall.post',
+        params=post_payload,
+    )
+    response.raise_for_status()
+    print(response.json())
 
 
 if __name__ == '__main__':
     load_dotenv()
     vk_token = os.getenv('VK_ACCESS_TOKEN')
     vk_api_url = 'https://api.vk.com/method/'
-    vk_group = os.getenv('VK_GROUP_ID')
+    vk_group = int(os.getenv('VK_GROUP_ID'))
     xkcd_number = 353
     xkcd_url = f'https://xkcd.com/{xkcd_number}/info.0.json'
 
@@ -83,4 +98,11 @@ if __name__ == '__main__':
         file.write(get_image(comic_image_url))
 
     with open(f'comic_{xkcd_number}.png', 'rb') as comic_image:
-        post_comic(vk_api_url, vk_group, vk_token, VK_API_VERSION, comic_image)
+        post_comic(
+            vk_api_url,
+            vk_group,
+            vk_token,
+            VK_API_VERSION,
+            comic_image,
+            comic_comment
+        )
