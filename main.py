@@ -20,18 +20,6 @@ def get_image_from_comic(url):
     return response.content
 
 
-def get_vk_groups(url, token, version):
-    url = f'{url}groups.get'
-    payload = {
-        'access_token': token,
-        'v': version,
-        'extended': 1,
-    }
-    response = requests.get(url, params=payload)
-    response.raise_for_status()
-    return response.json()
-
-
 def post_comic(url, group_id, token, version, image, message):
     upload_server_params = {
         'access_token': token,
