@@ -1,4 +1,5 @@
 import os
+from random import randint
 
 import requests
 from dotenv import load_dotenv
@@ -6,7 +7,8 @@ from dotenv import load_dotenv
 VK_API_VERSION = 5.131
 
 
-def get_comic(url):
+def get_comic(number):
+    url = f'https://xkcd.com/{number}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
     return response.json()
@@ -80,7 +82,6 @@ def post_comic(url, group_id, token, version, image, message):
         params=post_params,
     )
     response.raise_for_status()
-    print(response.json())
 
 
 if __name__ == '__main__':
@@ -88,15 +89,13 @@ if __name__ == '__main__':
     vk_token = os.getenv('VK_ACCESS_TOKEN')
     vk_api_url = 'https://api.vk.com/method/'
     vk_group = int(os.getenv('VK_GROUP_ID'))
-    xkcd_number = 353
-    xkcd_url = f'https://xkcd.com/{xkcd_number}/info.0.json'
-
-    comic = get_comic(xkcd_url)
+    latest_xkcd = requests.get('https://xkcd.com/info.0.json').json()['num']
+    xkcd_number = randint(1, latest_xkcd)
+    comic = get_comic(xkcd_number)
     comic_image_url = comic['img']
     comic_comment = comic['alt']
     with open(f'comic_{xkcd_number}.png', 'wb') as file:
         file.write(get_image_from_comic(comic_image_url))
-
     with open(f'comic_{xkcd_number}.png', 'rb') as comic_image:
         post_comic(
             vk_api_url,
@@ -106,3 +105,4 @@ if __name__ == '__main__':
             comic_image,
             comic_comment
         )
+        os.remove(comic_image.name)
