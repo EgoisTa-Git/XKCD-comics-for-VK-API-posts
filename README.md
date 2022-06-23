@@ -39,7 +39,7 @@ python main.py
 ### Например
 
 Пример работы скрипта в сообществе 
-[Little bit of XKCD](https://vk.com/public214084766).
+[Little bit of XKCD](https://vk.com/bit_of_xkcd).
 
 
 ***
