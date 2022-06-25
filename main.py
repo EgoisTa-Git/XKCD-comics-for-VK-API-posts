@@ -86,13 +86,15 @@ if __name__ == '__main__':
     comic_comment = comic['alt']
     with open(f'comic_{xkcd_number}.png', 'wb') as file:
         file.write(get_image_from_url(comic_image_url))
-    with open(f'comic_{xkcd_number}.png', 'rb') as comic_image:
-        post_comic(
-            vk_api_url,
-            vk_group,
-            vk_token,
-            VK_API_VERSION,
-            comic_image,
-            comic_comment
-        )
+    try:
+        with open(f'comic_{xkcd_number}.png', 'rb') as comic_image:
+            post_comic(
+                vk_api_url,
+                vk_group,
+                vk_token,
+                VK_API_VERSION,
+                comic_image,
+                comic_comment
+            )
+    finally:
         os.remove(comic_image.name)
