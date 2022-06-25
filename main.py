@@ -14,7 +14,7 @@ def get_comic(number):
     return response.json()
 
 
-def get_image_from_comic(url):
+def get_image_from_url(url):
     response = requests.get(url)
     response.raise_for_status()
     return response.content
@@ -83,7 +83,7 @@ if __name__ == '__main__':
     comic_image_url = comic['img']
     comic_comment = comic['alt']
     with open(f'comic_{xkcd_number}.png', 'wb') as file:
-        file.write(get_image_from_comic(comic_image_url))
+        file.write(get_image_from_url(comic_image_url))
     with open(f'comic_{xkcd_number}.png', 'rb') as comic_image:
         post_comic(
             vk_api_url,
