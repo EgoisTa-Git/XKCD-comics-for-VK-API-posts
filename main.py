@@ -33,10 +33,10 @@ def post_comic(url, group_id, token, version, image, message):
     upload_server_response.raise_for_status()
     response = upload_server_response.json()['response']
     album_id, upload_url, user_id = response.values()
-    image_data = {
+    image_payload = {
         'photo': image,
     }
-    upload_image_response = requests.post(upload_url, files=image_data)
+    upload_image_response = requests.post(upload_url, files=image_payload)
     upload_image_response.raise_for_status()
     server, photo, hash_ = upload_image_response.json().values()
     save_params = {
