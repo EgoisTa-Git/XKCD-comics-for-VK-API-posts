@@ -1,10 +1,15 @@
 import os
+from pprint import pprint
 from random import randint
 
 import requests
 from dotenv import load_dotenv
 
 VK_API_VERSION = 5.131
+
+
+class VkApiError(Exception):
+    pass
 
 
 def get_comic(number):
@@ -31,8 +36,8 @@ def get_upload_url(url, group_id, token, version):
         params=upload_server_params,
     )
     upload_server_response.raise_for_status()
-    response = upload_server_response.json()['response']
-    return response['upload_url']
+    exist_errors(upload_server_response.json())
+    return upload_server_response.json()['response']['upload_url']
 
 
 def upload_image(url, image):
@@ -41,6 +46,7 @@ def upload_image(url, image):
     }
     upload_image_response = requests.post(url, files=image_payload)
     upload_image_response.raise_for_status()
+    exist_errors(upload_image_response.json())
     server = upload_image_response.json()['server']
     photo = upload_image_response.json()['photo']
     hash_ = upload_image_response.json()['hash']
@@ -61,6 +67,7 @@ def save_image_on_server(url, group_id, token, version, server, photo, hash_):
         params=save_params,
     )
     save_response.raise_for_status()
+    exist_errors(save_response.json())
     response = save_response.json()['response'][0]
     owner_id = response['owner_id']
     photo_id = response['id']
@@ -83,6 +90,7 @@ def post_on_wall(url, group_id, token, version, owner_id, photo_id, message):
         params=post_params,
     )
     response.raise_for_status()
+    exist_errors(response.json())
     return response.json()
 
 
@@ -98,7 +106,7 @@ def post_comic(url, group_id, token, version, image, message):
         photo,
         hash_
     )
-    status = post_on_wall(
+    post_on_wall(
         url,
         group_id,
         token,
@@ -107,7 +115,12 @@ def post_comic(url, group_id, token, version, image, message):
         photo_id,
         message
     )
-    return status
+
+
+def exist_errors(json_response):
+    if 'error' in json_response.keys():
+        pprint(json_response['error'])
+        raise VkApiError(json_response['error']['error_msg'])
 
 
 if __name__ == '__main__':
