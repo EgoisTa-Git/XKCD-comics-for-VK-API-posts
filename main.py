@@ -20,7 +20,7 @@ def get_image_from_url(url):
     return response.content
 
 
-def post_comic(url, group_id, token, version, image, message):
+def get_upload_url(url, group_id, token, version):
     upload_server_params = {
         'access_token': token,
         'v': version,
@@ -32,15 +32,22 @@ def post_comic(url, group_id, token, version, image, message):
     )
     upload_server_response.raise_for_status()
     response = upload_server_response.json()['response']
-    upload_url = response['upload_url']
+    return response['upload_url']
+
+
+def upload_image(url, image):
     image_payload = {
         'photo': image,
     }
-    upload_image_response = requests.post(upload_url, files=image_payload)
+    upload_image_response = requests.post(url, files=image_payload)
     upload_image_response.raise_for_status()
     server = upload_image_response.json()['server']
     photo = upload_image_response.json()['photo']
     hash_ = upload_image_response.json()['hash']
+    return server, photo, hash_
+
+
+def save_image_on_server(url, group_id, token, version, server, photo, hash_):
     save_params = {
         'access_token': token,
         'v': version,
@@ -57,6 +64,10 @@ def post_comic(url, group_id, token, version, image, message):
     response = save_response.json()['response'][0]
     owner_id = response['owner_id']
     photo_id = response['id']
+    return owner_id, photo_id
+
+
+def post_on_wall(url, group_id, token, version, owner_id, photo_id, message):
     photo = f'photo{owner_id}_{photo_id}'
     post_params = {
         'access_token': token,
@@ -72,6 +83,31 @@ def post_comic(url, group_id, token, version, image, message):
         params=post_params,
     )
     response.raise_for_status()
+    return response.json()
+
+
+def post_comic(url, group_id, token, version, image, message):
+    upload_url = get_upload_url(url, group_id, token, version)
+    server, photo, hash_ = upload_image(upload_url, image)
+    owner_id, photo_id = save_image_on_server(
+        url,
+        group_id,
+        token,
+        version,
+        server,
+        photo,
+        hash_
+    )
+    status = post_on_wall(
+        url,
+        group_id,
+        token,
+        version,
+        owner_id,
+        photo_id,
+        message
+    )
+    return status
 
 
 if __name__ == '__main__':
