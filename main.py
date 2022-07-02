@@ -33,10 +33,11 @@ def upload_image(url, image):
     }
     upload_image_response = requests.post(url, files=image_payload)
     upload_image_response.raise_for_status()
-    exist_errors(upload_image_response.json())
-    server = upload_image_response.json()['server']
-    photo = upload_image_response.json()['photo']
-    hash_ = upload_image_response.json()['hash']
+    json_response = upload_image_response.json()
+    exist_errors(json_response)
+    server = json_response['server']
+    photo = json_response['photo']
+    hash_ = json_response['hash']
     return server, photo, hash_
 
 
