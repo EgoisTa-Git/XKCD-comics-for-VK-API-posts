@@ -12,19 +12,6 @@ class VkApiError(Exception):
     pass
 
 
-def get_comic(number):
-    url = f'https://xkcd.com/{number}/info.0.json'
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()
-
-
-def get_image_from_url(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.content
-
-
 def get_upload_url(url, group_id, token, version):
     upload_server_params = {
         'access_token': token,
@@ -130,11 +117,16 @@ if __name__ == '__main__':
     vk_group = int(os.getenv('VK_GROUP_ID'))
     latest_xkcd = requests.get('https://xkcd.com/info.0.json').json()['num']
     xkcd_number = randint(1, latest_xkcd)
-    comic = get_comic(xkcd_number)
+    comic_url = f'https://xkcd.com/{xkcd_number}/info.0.json'
+    comic_response = requests.get(comic_url)
+    comic_response.raise_for_status()
+    comic = comic_response.json()
     comic_image_url = comic['img']
     comic_comment = comic['alt']
     with open(f'comic_{xkcd_number}.png', 'wb') as file:
-        file.write(get_image_from_url(comic_image_url))
+        image_response = requests.get(comic_image_url)
+        image_response.raise_for_status()
+        file.write(image_response.content)
     try:
         with open(f'comic_{xkcd_number}.png', 'rb') as comic_image:
             post_comic(
